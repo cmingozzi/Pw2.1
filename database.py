@@ -2,7 +2,7 @@ import sqlite3
 import mysql.connector
 
 class SQLiteWriter:
-    def __init__(self, db_name="persone.db"):
+    def __init__(self, db_name="persone.sql"):
         """Inizializza la connessione al database SQLite"""
         self.db_name = db_name
         self.connection = sqlite3.connect(self.db_name)
@@ -16,6 +16,7 @@ class SQLiteWriter:
             nome TEXT,
             cognome TEXT,
             indirizzo TEXT,
+            email TEXT,
             telefono TEXT
         )
         """)
@@ -25,9 +26,9 @@ class SQLiteWriter:
         """Inserisce i dati nella tabella"""
         for person in data:
             self.cursor.execute("""
-            INSERT INTO persone (nome, cognome, indirizzo, telefono)
-            VALUES (?, ?, ?, ?)
-            """, (person["nome"], person["cognome"], person["indirizzo"], person["telefono"]))
+            INSERT INTO persone (nome, cognome, indirizzo, email, telefono)
+            VALUES (?, ?, ?, ?, ?)
+            """, (person["nome"], person["cognome"], person["indirizzo"], person["email"], person["telefono"]))
         self.connection.commit()
         print("Dati salvati nel database SQLite")
 
@@ -42,9 +43,20 @@ class SQLiteWriter:
             print("Il Database è vuoto.")
 
     def delete_all_data(self):
-        self.cursor.execute("DELETE FROM persone")
+      #  self.cursor.execute("DELETE FROM persone")
+      # Svuota la tabella
+        self.cursor.execute("DELETE FROM persone;")
+
+      # Resetta l'AUTOINCREMENT
+        self.cursor.execute("DELETE FROM sqlite_sequence WHERE name='persone';")
         self.connection.commit()
         print("Tutte le persone sono state eliminate dal database!")
+
+    def truncate_table(self):
+        self.cursor.execute("TRUNCATE TABLE persone")
+        self.connection.commit()
+        print("Tutte le persone sono state eliminate dal database e gli indici resettati!")
+
 
     def close(self):
         """Chiude la connessione al database"""
@@ -88,7 +100,7 @@ class MySQLWriter:
         cursor = self.connection.cursor()
         for person in data:
             cursor.execute("""
-            INSERT INTO persone (nome, cognome, indirizzo,email, telefono)
+            INSERT INTO persone (nome, cognome, indirizzo, email, telefono)
             VALUES (%s, %s, %s, %s, %s)
             """, (person["nome"], person["cognome"], person["indirizzo"], person["email"], person["telefono"]))
         self.connection.commit()

@@ -24,6 +24,7 @@ if __name__ == "__main__":
         print("4. Leggi persone dal database")
         print("5. Elimina tutte le persone dal database")
         print("9. Esci")
+        print("10 Excel to Sql")
 
         scelta = input("Scegli un'opzione: ")
 
@@ -56,6 +57,9 @@ if __name__ == "__main__":
             print("Programma terminato.")
             sqlite_writer.close()
             break
+
+        elif scelta == "10":
+            excel_writer.read_from_excel_and_insert_to_sql()
 
         else:
             print("Scelta non valida, riprova.")
