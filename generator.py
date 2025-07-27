@@ -12,7 +12,8 @@ class DataGenerator:
         for _ in range(self.count):
             nome = self.fake.first_name()
             cognome = self.fake.last_name()
-            email = nome.lower() + "." + cognome.lower() +"@" + self.fake.free_email_domain()
+            email = self.fake.free_email()
+            # nome.lower() + "." + cognome.lower() +"@" + self.fake.free_email_domain()
             person = {
                 "nome": nome,
                 "cognome": cognome,
