@@ -3,14 +3,29 @@ import sqlite3
 from cryptography.fernet import Fernet
 
 class SQLiteWriter:
+    """
+    Gestisce un database SQLite per l'archiviazione, la crittografia e la gestione di dati personali.
+    Attributi:
+        db_name (str): Nome del file database SQLite. Default: "persone.db".
+    """
 
     def __init__(self, db_name="persone.db"):
+        """
+        Inizializza un'istanza della classe SQLiteWriter.
+        Args:
+            db_name (str): Nome del file database SQLite da gestire. Default: "persone.db".
+        """
         self.db_name = db_name
 
-    def crypto_db(self, path_key="key.key"):
+    def crypto_db(self, path_key="psw.key"):
         """
-        Crittografa il file SQLite .db e crea un file .enc.
-        Chiede all'utente se eliminare il file .db originale dopo la crittografia.
+        Crittografa il file SQLite (`.db`) e salva il risultato in un file `.enc`.
+        Args:
+            path_key (str): Percorso del file contenente la chiave di crittografia. Se non esiste, viene generata.
+        Comportamento:
+            - Crittografa il contenuto del database.
+            - Salva il file crittografato come "<db_name>.enc".
+            - Chiede all'utente se eliminare il file `.db` originale.
         """
         if not os.path.exists(self.db_name):
             print(f"⚠️ Il file {self.db_name} non esiste, impossibile crittografare.")
@@ -50,10 +65,17 @@ class SQLiteWriter:
         else:
             print(f"ℹ️ Il file {self.db_name} è stato mantenuto.")
 
-    def decrypto_db(self, path_key="key.key", suppress_prompt=False):
+    def decrypto_db(self, path_key="psw.key", suppress_prompt=False):
         """
-        Decrittografa un file .db.enc generando un file .db decriptato.
-        Se enc_file e dec_file non sono forniti, usa self.db_name e self.db_name.enc.
+        Verifica la presenza e Decrittografa un database SQlite `.enc` generato da `crypto_excel()`
+        dopodichè ripristina il file SQLite originale.
+        Args:
+            path_key (str): Percorso del file contenente la chiave di crittografia.
+            suppress_prompt (bool): Se True, non elimina il file `.enc` dopo la decrittografia.
+        Comportamento:
+            - Legge la chiave dal file.
+            - Decritta il contenuto e sovrascrive il file `.db`.
+            - Chiede se eliminare il file `.enc`.
         """
         encrypted_filename = self.db_name + ".enc"
 
@@ -103,16 +125,31 @@ class SQLiteWriter:
                 print("⚠️ Scelta non valida, riprova.")
 
     def db_exists(self):
-        """Controlla se il file db esiste"""
+        """
+        Controlla se il file del database SQLite esiste.
+        Returns:
+            bool: True se il file esiste, False altrimenti.
+        """
         return os.path.exists(self.db_name)
 
     def connect(self):
-        """Connette al database solo quando necessario"""
+        """
+            Apre, quando è necessario, una connessione al database SQLite e inizializza il cursore.
+        """
         self.connection = sqlite3.connect(self.db_name)
         self.cursor = self.connection.cursor()
 
     def create_table(self):
-        """Crea la tabella se non esiste già"""
+        """
+        Se non esiste già, crea la tabella `persone` nel database.
+        La struttura, che deve essere uguale al file Excel, include:
+           - id (intero, autoincrement)
+           - nome
+           - cognome
+           - indirizzo
+           - email
+           - telefono
+        """
         self.connect()
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS persone (
@@ -128,7 +165,17 @@ class SQLiteWriter:
         self.connection.close()
 
     def write_to_db(self, data):
-        """Inserisce i dati nella tabella"""
+        """
+        Inserisce una lista di persone nella tabella `persone` del database.
+        Args:
+            data (list[dict]): Lista di dizionari contenenti i campi:
+            - 'nome', 'cognome', 'indirizzo', 'email', 'telefono'
+        Comportamento:
+            - Apre la connessione al database.
+            - Inserisce ogni dizionario come una nuova riga nella tabella `persone`.
+            - Salva le modifiche (commit) e chiude la connessione.
+            - Stampa un messaggio di conferma al termine dell'inserimento.
+        """
         self.connect()
         for person in data:
             self.cursor.execute("""
@@ -140,7 +187,12 @@ class SQLiteWriter:
         print("✅ Dati salvati nel database SQLite")
 
     def read_from_db(self):
-        """Legge e stampa le persone dal database se esistono"""
+        """
+        Legge e stampa tutte le persone presenti nella tabella `persone`.
+        Comportamento:
+            - Verifica se il database e la tabella esistono.
+            - Stampa tutte le righe trovate o un messaggio se vuoto.
+        """
         if not os.path.exists(self.db_name):
             print(f"⚠️ Il file {self.db_name} non esiste. Non ci sono dati da leggere.")
             return
@@ -174,10 +226,14 @@ class SQLiteWriter:
             print(f"❌ Errore durante la lettura dal database: {e}")
 
     def delete_all_data(self):
-        """Svuota la tabella e resetta l'autoincrement"""
+        """
+        Elimina tutti i dati dalla tabella `persone` e resetta l'autoincrement.
+        Comportamento:
+            - Rimuove tutte le righe dalla tabella.
+            - Reimposta il contatore ID a 1.
+        """
         if not os.path.exists(self.db_name):
-           # print(f"⚠️ Il file {self.db_name} non esiste. Nulla da eliminare.")
-            return
+           return
 
         try:
             self.connect()
@@ -191,7 +247,9 @@ class SQLiteWriter:
             print(f"❌ Errore durante l'eliminazione dei dati: {e}")
 
 def close(self):
-        """Chiude la connessione al database"""
+        """
+        Chiude la connessione al database se esiste
+        """
         if hasattr(self, 'connection'):
             self.connection.close()
             print("✅ Connessione SQLite chiusa")

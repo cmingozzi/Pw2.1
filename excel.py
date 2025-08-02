@@ -5,13 +5,30 @@ from cryptography.fernet import Fernet
 from openpyxl import Workbook
 
 class ExcelWriter:
+    """
+    Gestisce la creazione, crittografia, lettura e sincronizzazione di un file Excel
+    contenente dati personali e la sua importazione corretta in un database SQLite.
+    Attributi:
+        filename (str): Nome del file Excel da gestire. Default: "persone.xlsx"
+    """
     def __init__(self, filename = "persone.xlsx"):
+        """
+        Inizializza un'istanza della classe ExcelWriter.
+        Args:
+            filename (str): Il nome del file Excel da gestire. Default: "persone.xlsx".
+        """
         self.filename = filename
 
     def crypto_excel(self, path_key="key.key"):
         """
-        Crittografa il file Excel self.filename e salva il file crittografato con estensione .enc.
-        Chiede se eliminare il file Excel originale al termine.
+        Crittografa il file Excel associato all'istanza e salva il risultato come file `.enc`.
+        Args:
+            path_key (str): Percorso del file contenente la chiave di crittografia.
+            Se non esiste, verrà generata e salvata.
+        Comportamento:
+            - Genera una chiave se non esiste.
+            - Cripta il file Excel (`self.filename`) e salva un file `.enc`.
+            - Chiede all'utente se eliminare il file originale dopo la crittografia.
         """
         if not os.path.exists(self.filename):
             print(f"⚠️ Il file Excel {self.filename} non esiste, impossibile crittografare.")
@@ -26,7 +43,6 @@ class ExcelWriter:
         else:
             with open(path_key, "rb") as key_file:
                 key = key_file.read()
-
         fernet = Fernet(key)
 
         # Leggi il contenuto del file excel
@@ -60,9 +76,15 @@ class ExcelWriter:
 
     def decrypto_excel(self, path_key="key.key", suppress_prompt=False):
         """
-        Decrittografa un file Excel .enc generando un file decifrato.
-        Se enc_file e dec_file non sono forniti, usa self.filename e self.filename.enc.
-        Se suppress_prompt è True, non chiede conferma eliminazione.
+        Verifica la presenza e Decrittografa un file Excel`.enc` generato da `crypto_excel()`
+        dopodichè ripristina il file Excel originale.
+        Args:
+            path_key (str): Percorso del file contenente la chiave di crittografia.
+            suppress_prompt (bool): Se True, non elimina il file `.enc` dopo la decrittografia.
+        Comportamento:
+            - Verifica la presenza di file Excel e chiave.
+            - Se la chiave è corretta ripristina il file Excel.
+            - Chiede se eliminare il file `.enc`.
         """
         encrypted_filename = self.filename + ".enc"
 
@@ -112,10 +134,27 @@ class ExcelWriter:
                 print("⚠️ Scelta non valida, riprova.")
 
     def excel_exists(self):
-        """Controlla se il file Excel esiste"""
+        """
+        Verifica se il file Excel esiste nel percorso specificato.
+        Returns:
+            bool: True se il file esiste, False altrimenti.
+        """
         return os.path.exists(self.filename)
 
     def write_to_excel(self, data):
+        """
+        Scrive una lista di persone in un file Excel.
+        Args:
+            data (list[dict]): Lista di dizionari, ciascuno contiene:
+            - 'nome'
+            - 'cognome'
+            - 'indirizzo'
+            - 'email'
+            'telefono'
+        Comportamento:
+            - Crea un nuovo file Excel con intestazioni e dati.
+            - Sovrascrive eventuali file con lo stesso nome.
+        """
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Persone"
@@ -132,10 +171,16 @@ class ExcelWriter:
         print(f"✅ File Excel salvato come {self.filename}")
 
     def read_from_excel(self):
-        if not os.path.exists(self.filename):
+        """
+        Legge e stampa a video il contenuto del file Excel riga per riga.
+        Comportamento:
+            - Verifica l'esistenza del file.
+            - Legge il file con Pandas.
+            - Stampa ogni riga.
+        """
+        if not os.path.exists(self.filename): # verifica se esiste il file Excel
             print(f"⚠️ Il file Excel {self.filename} non esiste.")
             return
-
         try:
             df = pd.read_excel(self.filename, dtype=str)
             df.columns = [col.strip() for col in df.columns]
@@ -149,6 +194,14 @@ class ExcelWriter:
             print(f"❌ Errore durante la lettura del file Excel: {e}")
 
     def read_from_excel_and_insert_to_sql(self, db_name="persone.db"):
+        """
+        Legge i dati dal file Excel e li inserisce in una tabella SQLite.
+        Args:
+            db_name (str): Nome del file database SQLite. Default: "persone.db".
+        Comportamento:
+            - Crea la tabella 'persone' se non esiste.
+            - Inserisce tutti i dati del file Excel nel database.
+        """
         try:
             # Legge il file Excel
             df = pd.read_excel("persone.xlsx", sheet_name=0, dtype=str)
@@ -180,6 +233,14 @@ class ExcelWriter:
             print(f"❌ Errore durante la lettura/inserimento: {e}")
 
     def compare_excel_with_sql(self, db_name="persone.db"):
+        """
+        Confronta i dati tra il file Excel e la tabella SQLite 'persone'.
+        Args:
+            db_name (str): Nome del database SQLite da confrontare.
+        Comportamento:
+            - Normalizza i nomi delle colonne.
+            - Stampa le righe presenti solo in Excel o solo nel DB.
+        """
         try:
             #controlla l'esistenza del database
             if not os.path.exists(db_name):
@@ -217,6 +278,15 @@ class ExcelWriter:
                 conn.close()
 
     def delete_excel_and_db(self, db_filename="persone.db"):
+        """
+        Elimina sia il file Excel che il database SQLite, se esistono.
+        Args:
+            db_filename (str): Nome del database SQLite da eliminare.
+        Comportamento:
+            - Elimina il file Excel se esiste.
+            - Tenta di chiudere eventuali connessioni SQLite prima di rimuovere il file.
+            - Gestisce errori e avvisi.
+        """
         try:
             if os.path.exists(self.filename):
                 os.remove(self.filename)
@@ -237,7 +307,6 @@ class ExcelWriter:
                     print(f"✅ File {db_filename} eliminato con successo.")
                 except PermissionError as pe:
                     print(f"❌ Errore: il file {db_filename} è ancora in uso. Chiudi tutti i programmi che lo utilizzano e riprova.")
-                    #FileUtils.force_close_file('persone.db')
                 except Exception as inner_e:
                     print(f"❌ Errore durante l'eliminazione di {db_filename}: {inner_e}")
             else:

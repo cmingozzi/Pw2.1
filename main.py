@@ -1,3 +1,19 @@
+"""
+Modulo principale per l'interazione con il sistema di gestione dati personali.
+
+Consente di:
+- Generare persone casuali o inserire dati manualmente.
+- Salvare i dati in un file Excel o in un database SQLite.
+- Visualizzare, criptare, decriptare e confrontare i dati tra Excel e SQLite.
+- Eliminare i file generati.
+
+Il menu guida l'utente passo-passo attraverso tutte le funzionalità offerte.
+
+Moduli necessari:
+- generator.py: Generazione dati casuali o manuali
+- excel.py: Scrittura/lettura/confronto file Excel e genera dal file Excel un database SQLite contenente gli stessi dati
+- database.py: Scrittura/lettura/confronto database SQLite
+"""
 from database import SQLiteWriter
 from excel import ExcelWriter
 from generator import DataGenerator
