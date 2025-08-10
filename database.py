@@ -1,10 +1,12 @@
 import os
 import sqlite3
+
+import pandas as pd
 from cryptography.fernet import Fernet
 
 class SQLiteWriter:
     """
-    Gestisce un database SQLite per l'archiviazione, la crittografia e la gestione di dati personali.
+    Crea, importando i dati da un file Excel, e gestisce un un database SQLite per l'archiviazione, la crittografia e la gestione di dati personali.
     Attributi:
         db_name (str): Nome del file database SQLite. Default: "persone.db".
     """
@@ -16,6 +18,41 @@ class SQLiteWriter:
             db_name (str): Nome del file database SQLite da gestire. Default: "persone.db".
         """
         self.db_name = db_name
+
+    def read_from_excel_and_insert_to_sql(self, excel_file="persone.xlsx"):
+        """
+        Verifica l'esistenza e legge i dati da un file Excel e li inserisce nel database SQLite,
+        sovrascrivendo i dati esistenti nel caso fossero già presenti.
+        Args:
+            excel_file (str): file Excel da leggere.
+        Comportamento:
+            - Cancella i dati esistenti nel database.
+            - Ricrea la tabella `persone` con struttura coerente con l'Excel.
+            - Inserisce tutti i dati dal file Excel nel database.
+        """
+        if not os.path.exists(excel_file):
+            print(f"⚠️ Il file Excel '{excel_file}' non esiste.")
+            return
+
+        try:
+            # Legge il file Excel
+            df = pd.read_excel(excel_file, sheet_name=0, dtype=str)
+            # Rinomina colonne rimuovendo eventuali spazi invisibili
+            df.columns = [col.strip() for col in df.columns]
+            # Pulisce il database
+            self.delete_all_data()
+            self.create_table()
+            # Connessione al database
+            conn = sqlite3.connect(self.db_name)
+            # Inserisce i dati in SQL
+            df.to_sql("persone", conn, if_exists="append", index=False)
+            conn.commit()
+            conn.close()
+
+            print(f"✅ Dati importati con successo da '{excel_file}' in '{self.db_name}'.")
+
+        except Exception as e:
+            print(f"❌ Errore durante la lettura o scrittura dei dati: {e}")
 
     def crypto_db(self, path_key="psw.key"):
         """
@@ -144,21 +181,21 @@ class SQLiteWriter:
         Se non esiste già, crea la tabella `persone` nel database.
         La struttura, che deve essere uguale al file Excel, include:
            - id (intero, autoincrement)
-           - nome
-           - cognome
-           - indirizzo
-           - email
-           - telefono
+           - Nome
+           - Cognome
+           - Indirizzo
+           - Email
+           - Telefono
         """
         self.connect()
         self.cursor.execute("""
         CREATE TABLE IF NOT EXISTS persone (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT,
-            cognome TEXT,
-            indirizzo TEXT,
-            email TEXT,
-            telefono TEXT
+            Nome TEXT,
+            Cognome TEXT,
+            Indirizzo TEXT,
+            Email TEXT,
+            Telefono TEXT
         )
         """)
         self.connection.commit()

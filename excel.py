@@ -6,8 +6,8 @@ from openpyxl import Workbook
 
 class ExcelWriter:
     """
-    Gestisce la creazione, crittografia, lettura e sincronizzazione di un file Excel
-    contenente dati personali e la sua importazione corretta in un database SQLite.
+    Gestisce la creazione, crittografia, decrittografia e lettura di un file Excel
+    contenente dati personali inoltre la sua comparazione con un database SQLite.
     Attributi:
         filename (str): Nome del file Excel da gestire. Default: "persone.xlsx"
     """
@@ -158,14 +158,11 @@ class ExcelWriter:
         workbook = Workbook()
         sheet = workbook.active
         sheet.title = "Persone"
-
         # Scrive l'intestazione
         sheet.append(["Nome", "Cognome", "Indirizzo", "Email", "Telefono"])
-
         # Scrive i dati
         for person in data:
             sheet.append([person["nome"], person["cognome"], person["indirizzo"],person["email"], person["telefono"]])
-
         # Salva il file
         workbook.save(self.filename)
         print(f"✅ File Excel salvato come {self.filename}")
@@ -192,45 +189,6 @@ class ExcelWriter:
                 print("⚠️ Il file Excel è vuoto.")
         except Exception as e:
             print(f"❌ Errore durante la lettura del file Excel: {e}")
-
-    def read_from_excel_and_insert_to_sql(self, db_name="persone.db"):
-        """
-        Legge i dati dal file Excel e li inserisce in una tabella SQLite.
-        Args:
-            db_name (str): Nome del file database SQLite. Default: "persone.db".
-        Comportamento:
-            - Crea la tabella 'persone' se non esiste.
-            - Inserisce tutti i dati del file Excel nel database.
-        """
-        try:
-            # Legge il file Excel
-            df = pd.read_excel("persone.xlsx", sheet_name=0, dtype=str)
-
-            # Rinomina colonne rimuovendo eventuali spazi invisibili
-            df.columns = [col.strip() for col in df.columns]
-
-            # Costruisce la query CREATE TABLE dinamica
-            table_name = "persone"
-            columns_sql = ", ".join([f'"{col}" TEXT' for col in df.columns])
-            create_table_sql = f'CREATE TABLE IF NOT EXISTS {table_name} ({columns_sql});'
-
-            # Connessione al database
-            conn = sqlite3.connect("persone.db")
-            cursor = conn.cursor()
-
-            # Crea la tabella con struttura identica all'Excel
-            cursor.execute(create_table_sql)
-
-            # Inserisce i dati in SQL
-            df.to_sql("persone", conn, if_exists="append", index=False)
-
-            conn.commit()
-            conn.close()
-
-            print(f"✅ Dati importati con successo in {db_name}")
-
-        except Exception as e:
-            print(f"❌ Errore durante la lettura/inserimento: {e}")
 
     def compare_excel_with_sql(self, db_name="persone.db"):
         """

@@ -32,15 +32,15 @@ if __name__ == "__main__":
         print("1. Genera 10 persone casuali")
         print("2. Inserisci manualmente nominativi simulando richiesta autorizzazione")
         print("3. Salva persone su Excel")
-        print("4. Copia dati Excel su database Sql")
-        print("5. Stampa persone dal database")
+        print("4. Copia dati Excel su Database Sql")
+        print("5. Stampa persone dal Database")
         print("6. Stampa persone dal file Excel")
         print("7. Confronta i file Excel e Sql e stampa entrambi")
         print("8. Cripta file excel")
-        print("9. Cripta databese")
-        print("10. Decripta file excel")
+        print("9. Cripta database")
+        print("10. Decripta file Excel")
         print("11. Decripta database")
-        print("12. Elimina file excel e sql")
+        print("12. Elimina file Excel e Database")
         print("13. Esci")
 
         scelta = input("Scegli un'opzione: ")
@@ -52,6 +52,7 @@ if __name__ == "__main__":
             print(f"✅ Sono state generate {len(persone)} persone.")
 
         elif scelta == "2":
+            # Genera dati facendoli inserire manualmente all'utente
             generator = DataGenerator()
             persone = generator.generate_manual_person()
 
@@ -63,14 +64,8 @@ if __name__ == "__main__":
                 print("⚠️ Prima devi generare delle persone!")
 
         elif scelta == "4":
-            # Genera file db e copia dati da excel
-            if excel_writer.excel_exists():
-                sqlite_writer.delete_all_data()
-                sqlite_writer.create_table()
-                excel_writer.read_from_excel_and_insert_to_sql()
-                print("✅ Dati copiati da Excel a database SQLite.")
-            else:
-                print("⚠️ Prima devi generare il file excel!")
+            # Importa i dati contenuti nel file excel in un Database
+            sqlite_writer.read_from_excel_and_insert_to_sql()
 
         elif scelta == "5":
             # Stampa contenuto file db
