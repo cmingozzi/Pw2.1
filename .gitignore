@@ -1,0 +1,66 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Cache e file compilati
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Config locali / credenziali
+*.env
+*.ini
+*.cfg
+*.toml
+*.sqlite3
+
+# Log
+*.log
+
+# Build e distribuzione
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test
+.coverage
+.pytest_cache/
+.tox/
+.mypy_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ====================================
+# IDE JetBrains (PyCharm, IntelliJ)
+# ====================================
+.idea/
+*.iml
+
+# File personali IDE
+*.iws
+out/
+
+# ====================================
+# Sistema operativo
+# ====================================
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ====================================
+# Altro
+# ====================================
+# File temporanei
+*.swp
+*.swo
+*.bak
